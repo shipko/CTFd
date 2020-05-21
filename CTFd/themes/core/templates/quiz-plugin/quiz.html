@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/challenge-board.css') }}">
+{% endblock %}
+
+{% block content %}
+    <style>
+        code {
+            font-family: Consolas, Lucida Console, Menlo, Monaco, monospace;
+            padding: 2px 4px;
+            background: #f5f2f0;
+            border-radius: 2px;
+        }
+
+        .quiz-question .quiz-question__variant {
+            position: relative;
+            line-height: 16px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            padding-left: 25px;
+        }
+
+        .quiz-question__input {
+            position: absolute;
+            top: 50%;
+            left: -25px;
+            margin: -9px 0 0;
+            width: 16px;
+            height: 16px;
+        }
+
+        .quiz-question {
+            min-width: 600px;
+            margin-top: 25px
+        }
+
+        .quiz-question h3, .quiz-question li, .quiz-question ul, .quiz-question ul li {
+            padding: 0;
+            margin: 0;
+            line-height: auto
+        }
+
+        .quiz-question p {
+            padding: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            line-height: auto
+        }
+
+        .quiz-question ul li:before {
+            display: none
+        }
+
+        .quiz-question__title {
+            font-size: 16px
+        }
+
+        .quiz-question .quiz-question__variants {
+            margin-top: 25px
+        }
+
+        .quiz-question .quiz-question__variant {
+            position: relative;
+            line-height: 16px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            padding-left: 25px
+        }
+
+        .quiz-question__label {
+            font-size: 14px;
+            display: inline-block;
+            position: relative;
+            cursor: pointer
+        }
+
+        .quiz-question__input {
+            position: absolute;
+            top: 50%;
+            left: -25px;
+            margin: -9px 0 0;
+            width: 16px;
+            height: 16px;
+        }
+
+        .quiz-question__input:checked + .quiz-question__input-text {
+            font-weight: 700
+        }
+
+        .quiz-question__description {
+            margin-bottom: 20px;
+            margin-top: 5px
+        }
+
+        .quiz-question__description .code-example, .quiz-question__description .codebox {
+            margin: 0
+        }
+
+        .quiz-question .quiz-question__note {
+            font-size: 12px;
+            margin: 20px;
+            margin-bottom: 0;
+            color: #666
+        }
+
+        .quiz-question__submit {
+            margin-top: 25px
+        }
+
+        .quiz-question_correct_true .quiz-question__body {
+            border-color: #bbd4a5
+        }
+
+        .quiz-question_correct_false .quiz-question__body {
+            border-color: #eaaaad
+        }
+
+        .quiz-question__variant_correct_true .quiz-question__input-text {
+            font-weight: 700;
+            color: #060
+        }
+
+        .quiz-question__variant_correct_false.quiz-question__variant_selected .quiz-question__input-text {
+            font-weight: 700;
+            color: #d90000
+        }
+
+    </style>
+    <div class="container text-center mt-5">
+        <h1>{{ quiz.title }}</h1>
+
+        {% if not started %}
+            <p class="lead">{{ quiz.description }}</p>
+            <div class="quiz-question p-5 mb-5 text-center" style="border: 3px solid #eee; border-radius: 10px;">
+                <form action="/quiz/{{ name }}/start" method="POST">
+                    <button type="submit" name="go" class="btn btn-success btn-lg">Начать тестирование</button>
+                    <p class="m-0 mt-4">Нажмите на кнопку выше, чтобы начать тестирование.<br/>
+                        Сразу после этого начнется отчет времени.</p>
+                </form>
+
+            </div>
+        {% endif %}
+        {% if started %}
+            <nav aria-label="Page navigation example" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% for i in range(quiz.questionsToAskCount) %}
+                        {% set disabled = 'disabled' if i < num else '' %}
+                        {% set active = 'active' if i == num else '' %}
+                        <li class="page-item {{ disabled }} {{ active }}"><a class="page-link" href="#">{{ i + 1 }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            <div class="content content content_center">
+                <div class="quiz">
+                    <h2>Вопрос<strong
+                            class="quiz-tablet-timeline__num">&nbsp;{{ num + 1 }}&nbsp;</strong>из&nbsp;<strong
+                            class="quiz-tablet-timeline__total">{{ quiz.questionsToAskCount }}</strong></h2>
+
+                    <form action="/quiz/{{ name }}" data-quiz-question-form="" method="POST">
+                        <input type="hidden" name="nonce" value="{{ nonce }}">
+                        <div class="quiz-question text-left p-5 mb-5"
+                             style="border: 3px solid #eee; border-radius: 10px;">
+                            {% set question = quiz['questions'][next] %}
+                            <input type="hidden" name="type" value="{{ question.type }}">
+                            <div class="quiz-question__body"><p>{{ markdown(question.content) | safe }}</p>
+                                <ul class="list-unstyled quiz-question__variants">
+                                    {% for answer in question.answers %}
+                                        <li class="quiz-question__variant">
+                                            <label class="quiz-question__label">
+                                                <input class="quiz-question__input"
+                                                       type="{{ 'checkbox' if question.type == 'multi' else 'radio' }}"
+                                                       value="{{ loop.index0 }}" name="answer">
+                                                <span class="quiz-question__input-text">{{ markdown(answer | string) | safe }}</span>
+                                            </label>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                        </div>
+                        <div class="quiz-question__submit">
+                            <button class="button button_action" type="submit" disabled=""><span
+                                    class="button__text">Продолжить</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        var e = document.querySelector("[data-quiz-question-form]");
+        e && function (e) {
+            console.log(e.elements);
+
+            function t() {
+                var t = e.elements.type.value, n = e.elements.answer, r = [];
+
+                for (let a = 0; a < n.length; a++) {
+                    console.log(t, n);
+                    n[a].checked && r.push(+n[a].value);
+                }
+                return ("single" === t && (r = r[0])) || r;
+            }
+
+            e.onchange = function () {
+                var n = t();
+                switch (e.elements.type.value) {
+                    case "single":
+                        e.querySelector('[type="submit"]').disabled = void 0 === n;
+                        break;
+
+                    case "multi":
+                        e.querySelector('[type="submit"]').disabled = !n.length;
+                        break;
+
+                    default:
+                        throw new Error("unknown type");
+                }
+            };
+        }(e);
+    </script>
+{% endblock %}
+
+{% block entrypoint %}
+{% endblock %}

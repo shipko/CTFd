@@ -25,6 +25,17 @@
 		<textarea id="desc-editor" class="form-control chal-desc-editor" name="description" rows="10">{{ challenge.description }}</textarea>
 	</div>
 
+    <div class="form-group">
+        <label>
+            Что почитать<br>
+            <small class="form-text text-muted">
+                Предложить игрокам перед началом выполнения задания хорошо изучить материал.
+            </small>
+        </label>
+        <textarea id="desc-editor" class="form-control chal-desc-editor" name="to_read"
+                  rows="10">{{ challenge.to_read }}</textarea>
+    </div>
+
 	<div class="form-group">
 		<label for="value">
 			Value<br>

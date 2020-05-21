@@ -53,7 +53,7 @@
     "typeface-lato": "~0.0.54",
     "typeface-raleway": "~0.0.54",
     "uglifyjs-webpack-plugin": "~2.1.1",
-    "webpack": "~4.28.1",
+    "webpack": "^4.28.4",
     "webpack-cli": "~3.2.1",
     "webpack-fix-style-only-entries": "~0.3.0",
     "webpack-shell-plugin": "^0.5.0",

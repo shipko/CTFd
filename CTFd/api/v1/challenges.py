@@ -7,7 +7,7 @@ from sqlalchemy.sql import and_
 from CTFd.cache import clear_standings
 from CTFd.models import ChallengeFiles as ChallengeFilesModel
 from CTFd.models import Challenges, Fails, Flags, Hints, HintUnlocks, Solves, Tags, db
-from CTFd.plugins.challenges import CHALLENGE_CLASSES, get_chal_class
+from CTFd.plugins.challenges import CHALLENGE_CLASSES, get_chal_class, chal_is_available
 from CTFd.schemas.flags import FlagSchema
 from CTFd.schemas.hints import HintSchema
 from CTFd.schemas.tags import TagSchema
@@ -44,6 +44,19 @@ class ChallengeList(Resource):
     @during_ctf_time_only
     @require_verified_emails
     def get(self):
+        challenges = Challenges.query.order_by(Challenges.category, Challenges.value)
+        chal_matrix = [[0] for j in range(50)]
+
+        i = 0
+        current_category = False
+
+        for ch in challenges:
+            if not current_category or ch.category != current_category:
+                current_category = ch.category
+                i += 1
+
+            chal_matrix[i].append(ch.id)
+
         # This can return None (unauth) if visibility is set to public
         user = get_current_user()
 
@@ -51,7 +64,7 @@ class ChallengeList(Resource):
             Challenges.query.filter(
                 and_(Challenges.state != "hidden", Challenges.state != "locked")
             )
-            .order_by(Challenges.value)
+            .order_by(Challenges.category.desc(), Challenges.value)
             .all()
         )
 
@@ -76,6 +89,7 @@ class ChallengeList(Resource):
         response = []
         tag_schema = TagSchema(view="user", many=True)
         for challenge in challenges:
+            challenge_is_open = type(chal_is_available(challenge.id, chal_matrix, solve_ids)) != dict
             if challenge.requirements:
                 requirements = challenge.requirements.get("prerequisites", [])
                 anonymize = challenge.requirements.get("anonymize")
@@ -110,6 +124,8 @@ class ChallengeList(Resource):
                     "tags": tag_schema.dump(challenge.tags).data,
                     "template": challenge_type.templates["view"],
                     "script": challenge_type.scripts["view"],
+                    "open": challenge_is_open,
+                    "grade": challenge.grade
                 }
             )
 
@@ -150,6 +166,19 @@ class Challenge(Resource):
     @during_ctf_time_only
     @require_verified_emails
     def get(self, challenge_id):
+        challenges = Challenges.query.order_by(Challenges.category, Challenges.value)
+        chal_matrix = [[0] for j in range(50)]
+
+        i = 0
+        current_category = False
+
+        for ch in challenges:
+            if not current_category or ch.category != current_category:
+                current_category = ch.category
+                i += 1
+
+            chal_matrix[i].append(ch.id)
+
         if is_admin():
             chal = Challenges.query.filter(Challenges.id == challenge_id).first_or_404()
         else:
@@ -160,6 +189,24 @@ class Challenge(Resource):
 
         chal_class = get_chal_class(chal.type)
 
+        user = get_current_user()
+        if not user:
+            abort(403)
+
+        solve_ids = (
+            Solves.query.with_entities(Solves.challenge_id)
+                .filter_by(account_id=user.account_id)
+                .order_by(Solves.challenge_id.asc())
+                .all()
+        )
+        solve_ids = [value for value, in solve_ids]
+        # solve_ids.append(0) # Чтобы не проверять, что таск находится в самом верху или слева.
+
+        # Проверяем таски по матрице
+        chal_status = chal_is_available(chal.id, chal_matrix, solve_ids)
+        if type(chal_status) == dict:
+            return chal_status
+        
         if chal.requirements:
             requirements = chal.requirements.get("prerequisites", [])
             anonymize = chal.requirements.get("anonymize")

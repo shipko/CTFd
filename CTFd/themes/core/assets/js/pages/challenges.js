@@ -50,6 +50,25 @@ const displayChal = chal => {
     const template_data = responses[2];
     const challenge = CTFd._internal.challenge;
 
+    if (!responses[0].success && responses[0].need_pass) {
+        let chal_to_pass = [];
+        for (let i in responses[0].need_pass) {
+            let chal = challenges.find((element) => {
+                return element.id == responses[0].need_pass[i];
+            });
+
+            if (chal) {
+                chal_to_pass.push(chal.name);
+            }
+        }
+
+        ezAlert({
+            title: "Таск недоступен",
+            body: 'Для этого задания сначала необходимо решить ' + chal_to_pass.join(' или '),
+            button: "Понял!"
+        });
+    }
+
     $("#challenge-window").empty();
     const template = nunjucks.compile(template_data);
     challenge.data = challenge_data;
@@ -275,18 +294,16 @@ function loadChals() {
 
         const categoryid = category.replace(/ /g, "-").hashCode();
         const categoryrow = $(
-          "" +
-            '<div id="{0}-row" class="pt-5">'.format(categoryid) +
-            '<div class="category-header col-md-12 mb-3">' +
-            "</div>" +
-            '<div class="category-challenges col-md-12">' +
-            '<div class="challenges-row col-md-12"></div>' +
-            "</div>" +
-            "</div>"
+            "" +
+            '<div id="{0}-row" class="row">'.format(categoryid) +
+            '<div class="category-header col-2"></div>\n' +
+            '<div class="category-challenges col m-0"><div class="challenges-row row">\n' +
+            '</div></div></div>'
         );
         categoryrow
-          .find(".category-header")
-          .append($("<h3>" + category + "</h3>"));
+            .find(".category-header")
+            .append($("<h3 class='text-right pt-4'>" + category + "</h3>"));
+
 
         $challenges_board.append(categoryrow);
       }
@@ -297,29 +314,32 @@ function loadChals() {
       const chalid = chalinfo.name.replace(/ /g, "-").hashCode();
       const catid = chalinfo.category.replace(/ /g, "-").hashCode();
       const chalwrap = $(
-        "<div id='{0}' class='col-md-3 d-inline-block'></div>".format(chalid)
+          "<div id='{0}' class='col-2 m-0 p-0 d-inline-block'>".format(chalid)
       );
       let chalbutton;
 
-      if (solves.indexOf(chalinfo.id) == -1) {
-        chalbutton = $(
-          "<button class='btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2' value='{0}'></button>".format(
-            chalinfo.id
-          )
-        );
-      } else {
-        chalbutton = $(
-          "<button class='btn btn-dark challenge-button solved-challenge w-100 text-truncate pt-3 pb-3 mb-2' value='{0}'><i class='fas fa-check corner-button-check'></i></button>".format(
-            chalinfo.id
-          )
-        );
-      }
+      let gradesColor = {
+        'beginner': 'warning',
+        'middle': 'success',
+        'default': 'dark'
+      };
 
-      const chalheader = $("<p>{0}</p>".format(chalinfo.name));
+      chalbutton = $(
+          ("<button class='btn btn-{1} challenge-button  w-100 text-truncate pt-3 pb-3' value='{0}'>" +
+           "{3}" +
+          "</button>").format(
+              chalinfo.id,
+              gradesColor[chalinfo.grade ? chalinfo.grade : 'default'],
+              solves.indexOf(chalinfo.id) !== -1 ? 'solved-challenge' : '',
+              !chalinfo.open ? "<i class='fas fa-lock corner-button-check'></i>" : ""
+          )
+      );
+
+      const chalheader = $("<h4>{0}</h4>".format(chalinfo.name));
       const chalscore = $("<span>{0}</span>".format(chalinfo.value));
       for (let j = 0; j < chalinfo.tags.length; j++) {
-        const tag = "tag-" + chalinfo.tags[j].value.replace(/ /g, "-");
-        chalwrap.addClass(tag);
+          const tag = "tag-" + chalinfo.tags[j].value.replace(/ /g, "-");
+          chalwrap.addClass(tag);
       }
 
       chalbutton.append(chalheader);
@@ -379,6 +399,8 @@ $(() => {
     $("#already-solved").slideUp();
     $("#too-fast").slideUp();
   });
+  
+  $('[data-toggle="tooltip"]').tooltip();
 });
 setInterval(update, 300000); // Update every 5 minutes.
 

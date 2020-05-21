@@ -73,6 +73,7 @@ class CTFdStandardChallenge(BaseChallenge):
             "name": challenge.name,
             "value": challenge.value,
             "description": challenge.description,
+            "to_read": challenge.to_read,
             "category": challenge.category,
             "state": challenge.state,
             "max_attempts": challenge.max_attempts,
@@ -201,6 +202,31 @@ def get_chal_class(class_id):
         raise KeyError
     return cls
 
+
+def chal_is_available(chal_id, matrix, solve_ids):
+    p = None
+    for i, row in enumerate(matrix):
+        if p:
+            break
+
+        for j, el in enumerate(row):
+            if el == chal_id:
+                p = (i, j)
+                break
+    else:
+        return {'success': False, 'description': 'can\'t find chal in matrix'}
+
+    # print(matrix, p)
+
+
+    (i, j) = p
+    top_chal = matrix[i - 1][j] if (len(matrix[i - 1]) - 1) >= j and (i != 1) else 0
+    left_chal = matrix[i][j - 1] if (j - 1) >= 0 else 0
+
+    if top_chal not in solve_ids and left_chal not in solve_ids and (top_chal != 0 or left_chal != 0):
+        return {'success': False, 'need_pass': [top_chal, left_chal]}
+
+    return True
 
 """
 Global dictionary used to hold all the Challenge Type classes used by CTFd. Insert into this dictionary to register

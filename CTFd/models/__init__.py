@@ -63,15 +63,21 @@ class Pages(db.Model):
 
 class Challenges(db.Model):
     __tablename__ = "challenges"
+
+    def get_grades(self):
+        return ['beginner', 'middle']
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
     description = db.Column(db.Text)
+    to_read = db.Column(db.Text)
     max_attempts = db.Column(db.Integer, default=0)
     value = db.Column(db.Integer)
     category = db.Column(db.String(80))
     type = db.Column(db.String(80))
     state = db.Column(db.String(80), nullable=False, default="visible")
     requirements = db.Column(db.JSON)
+    grade = db.Column(db.Enum(*get_grades("")), default="beginner")
 
     files = db.relationship("ChallengeFiles", backref="challenge")
     tags = db.relationship("Tags", backref="challenge")
