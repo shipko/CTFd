@@ -29,6 +29,8 @@ from CTFd.utils.migrations import (
 )
 from CTFd.utils.uploads import get_uploader
 
+def test_function():
+    pass
 
 def export_ctf():
     # TODO: For some unknown reason dataset is only able to see alembic_version during tests.
