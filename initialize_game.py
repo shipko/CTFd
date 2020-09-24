@@ -30,6 +30,7 @@ def get_flag(compose_data):
 
     return 'SUPERSECRETFLAG'
 
+
 if __name__ == "__main__":
     with app.app_context():
         db = app.db
@@ -67,6 +68,7 @@ if __name__ == "__main__":
                 print({"name": data['name'], "category": data['category'],
                                          "description": description, "value": data['value'],
                                          "state": "visible", "type": "standard", "to_read": to_read})
+
 
                 challenge = s.post(url=f"{host}/api/v1/challenges",
                                    json={"name": data['name'], "category": data['category'],
