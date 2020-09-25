@@ -14,7 +14,9 @@
                 <div class="row">
                     <div class="col-8">
                         <span class="challenge-desc">{{ description | safe }}</span>
+                        {% if files | length > 0 %}
                         <h5 class="mt-2">Необходимые файлы</h5>
+                        {% endif %}
                         <div class="challenge-files pb-3">
                             {% for file in files %}
                                 <a class="btn btn-info btn-file mb-1 px-2 text-truncate"
@@ -45,7 +47,7 @@
                 <div class="col-md-9 form-group">
                     <input class="form-control" type="text" name="answer" id="submission-input"
                            placeholder="Секретная фраза">
-                    <input id="challenge-id" type="hidden" value="1">
+                    <input id="challenge-id" type="hidden" value="{{ id }}">
                 </div>
                 <div class="col-md-3 form-group key-submit">
                     <button type="submit" id="submit-key" tabindex="0"

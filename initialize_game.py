@@ -14,11 +14,21 @@ host = input("Please input your url in format http://<host>: ")
 
 access_token = input("Please input your admin access token: ")
 
+game_host = input("Please input game host without port: ")
+
 def generate_session():
     s = requests.Session()
     s.headers.update({"Authorization": f"Token {access_token}"})
     return s
 
+def get_flag(compose_data):
+    if "FLAG" in compose_data['environment']:
+        return compose_data['environment']['FLAG']
+
+    if "FLAG" in compose_data.get('build', {}).get('args', False):
+        return compose_data['build']['args']['FLAG']
+
+    return 'SUPERSECRETFLAG'
 
 if __name__ == "__main__":
     with app.app_context():
@@ -52,7 +62,12 @@ if __name__ == "__main__":
                     to_read += f"<a href='{l}'>Ссылка</a>\n<br />"
 
                 port = services[task]['ports'][0].split(':')[0]
-                description = f"{data['description']} <br /> <a href='{host}:{port}'>Ссылка на задание</a>"
+                description = f"{data['description']} <br /> <a href='{game_host}:{port}'>Ссылка на задание</a>"
+
+                print({"name": data['name'], "category": data['category'],
+                                         "description": description, "value": data['value'],
+                                         "state": "visible", "type": "standard", "to_read": to_read})
+
                 challenge = s.post(url=f"{host}/api/v1/challenges",
                                    json={"name": data['name'], "category": data['category'],
                                          "description": description, "value": data['value'],
@@ -61,6 +76,8 @@ if __name__ == "__main__":
 
                 response = challenge.json()['data']
 
-                data = {"content": "SUPERSECRETVALUE", "type": "static", "challenge": response['id']}
+                flag = get_flag(services[task])
+                print(flag)
+                data = {"content": flag, "type": "static", "challenge": response['id']}
                 r = s.post(url=f"{host}/api/v1/flags", json=data)
                 r.raise_for_status()

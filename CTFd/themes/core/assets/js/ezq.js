@@ -79,6 +79,10 @@ export function ezAlert(args) {
     obj.find(".modal-dialog").addClass("modal-lg");
   }
 
+  if (args.xlarge) {
+    obj.find(".modal-dialog").addClass("modal-xl");
+  }
+
   obj.find(".modal-footer").append(button);
   $("main").append(obj);
 

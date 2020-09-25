@@ -242,7 +242,7 @@ def create_app(config="CTFd.config.Config"):
         if not utils.get_config("ctf_theme"):
             utils.set_config("ctf_theme", "core")
 
-        update_check(force=True)
+        #update_check(force=True)
 
         init_request_processors(app)
         init_template_filters(app)
