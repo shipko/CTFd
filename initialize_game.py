@@ -30,6 +30,7 @@ def get_flag(compose_data):
 
     return 'SUPERSECRETFLAG'
 
+
 if __name__ == "__main__":
     with app.app_context():
         db = app.db
